@@ -17,17 +17,9 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className="bg-[#ede2cb]">
       <body
-        className={`${montserrat.variable} antialiased max-w-screen-xl relative mx-auto`}
+        className={`${montserrat.variable} antialiased max-w-screen-xl mx-auto`}
       >
-        <main className="relative">
-          <header className="absolute w-full px-3">
-            <Header />
-          </header>
-          {children}
-          <footer className="absolute bottom-3 w-full px-3">
-            <Footer />
-          </footer>
-        </main>
+        {children}
       </body>
     </html>
   );
