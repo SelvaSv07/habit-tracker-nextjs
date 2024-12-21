@@ -2,7 +2,7 @@ import { Circle, CircleCheck } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 
-export default function HabitCard({ habit, completed }) {
+export default function HabitCard({ habit, completed, alreadyCompleted }) {
   const frequency =
     habit.frequency.length === 7
       ? "EVERY DAY"
@@ -31,11 +31,25 @@ export default function HabitCard({ habit, completed }) {
   }
 
   function renderCheckCircle() {
-    if (completed) {
-      return <CircleCheck className="h-6 w-6" />;
+    if (alreadyCompleted) {
+      return (
+        <CircleCheck
+          onClick={() => {
+            completed(habit.id, false);
+          }}
+          className="h-6 w-6 cursor-pointer"
+        />
+      );
     }
 
-    return <Circle className="h-6 w-6" />;
+    return (
+      <Circle
+        onClick={() => {
+          completed(habit.id, true);
+        }}
+        className="h-6 w-6 cursor-pointer"
+      />
+    );
   }
 
   return (
