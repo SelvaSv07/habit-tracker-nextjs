@@ -1,63 +1,23 @@
 "use client";
 
 import supabase from "@/utils/supabase/client";
-import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from "react";
-import { Circle, CircleCheck } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
-
-function HabitCard({ habit }) {
-  const frequency =
-    habit.frequency.length === 7
-      ? "EVERY DAY"
-      : `EVERY WEEK / ${habit.frequency
-          .map((day) => day.slice(0, 3).toUpperCase())
-          .join(" ")}`;
-  console.log(frequency);
-
-  function calculateProgress() {
-    return Math.round((habit.goal_completed / habit.goal) * 100);
-  }
-
-  function renderProgress() {
-    if (habit.goal) {
-      return (
-        <div className="pt-1 pb-0.5">
-          <Progress
-            indicatorColor={habit.color}
-            value={calculateProgress()}
-            className="h-1.5 rounded-full"
-          />
-        </div>
-      );
-    } else {
-      return null;
-    }
-  }
-
-  return (
-    <div className="flex items-center gap-8 px-4 bg-white rounded-lg py-4">
-      <Circle className="h-6 w-6" />
-      <div className="w-full flex flex-col gap-2">
-        <div className="w-full flex justify-between items-center">
-          <p className="text-xs font-semibold tracking-wide">{frequency}</p>
-          <Badge style={{ backgroundColor: habit.color }}>
-            {habit.category}
-          </Badge>
-        </div>
-        <h2 className="text-lg font-bold tracking-wider">{habit.name}</h2>
-        {renderProgress()}
-      </div>
-    </div>
-  );
-}
+import HabitCard from "./HabitCard";
+import Loading from "@/app/loading";
+import { isToday } from "date-fns";
 
 export default function HabitList() {
   const [habits, setHabits] = useState(null);
+  const [habitLog, setHabitLog] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    const USER_ID_KLAUS = "3f06401e-d580-4cd2-bb3b-4d63796b0094";
+    const USER_ID_ELIJAHH = "e973adbc-bc34-4364-a58c-13b056912fde";
+
     async function fetchHabits(userId) {
       try {
+        setLoading(true);
         const { data: habitsData, error: habitsError } = await supabase
           .from("habits")
           .select("*")
@@ -72,16 +32,60 @@ export default function HabitList() {
         }
       } catch (error) {
         console.error(error);
+      } finally {
+        setLoading(false);
       }
     }
 
-    fetchHabits("3f06401e-d580-4cd2-bb3b-4d63796b0094");
+    async function fetchHabitLog(userId) {
+      try {
+        setLoading(true);
+        const { data: habitLogData, error: habitLogError } = await supabase
+          .from("habit_logs")
+          .select("*")
+          .eq("user_id", userId);
+
+        if (habitLogError || !habitLogData) {
+          console.error(habitLogError);
+        }
+
+        if (habitLogData) {
+          setHabitLog(habitLogData);
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchHabits(USER_ID_ELIJAHH);
+    fetchHabitLog(USER_ID_ELIJAHH);
   }, []);
+
+  function isHabitCompletedToday(habitId) {
+    const currentHabitLog = habitLog.filter(
+      (habit) => habit.habit_id === habitId
+    );
+    const todaysLog = currentHabitLog.filter((habit) => isToday(habit.date));
+    const todaysStatus = todaysLog.length === 1 && todaysLog[0].status;
+    return todaysStatus;
+  }
+
+  if (loading || !habitLog || !habits) {
+    return <Loading message="Data is loading ..." />;
+  }
 
   return (
     <div className="px-8 space-y-8 bg-[#ede2cb] pt-16">
       {habits &&
-        habits.map((habit) => <HabitCard key={habit.id} habit={habit} />)}
+        habits.map((habit) => (
+          <HabitCard
+            key={habit.id}
+            habit={habit}
+            completed={isHabitCompletedToday(habit.id)}
+          />
+        ))}
     </div>
   );
 }
