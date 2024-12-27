@@ -1,7 +1,7 @@
 "use client";
 
 import supabase from "@/utils/supabase/client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import HabitCard from "./HabitCard";
 import Loading from "@/app/loading";
 import { format, isToday } from "date-fns";
@@ -70,8 +70,9 @@ export default function HabitList() {
     return todaysStatus;
   }
 
-  async function habitCompleted(habitId, status) {
+  async function habitCompleted(habitId, status, setLoader) {
     try {
+      setLoader(true);
       const { error } = await supabase
         .from("habit_logs")
         .upsert(
@@ -96,6 +97,8 @@ export default function HabitList() {
       }
     } catch (error) {
       console.error(error);
+    } finally {
+      setLoader(false);
     }
   }
 
